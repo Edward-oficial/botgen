@@ -5,6 +5,10 @@ const GROQ_KEYS = [
   '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',
   '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',
   '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',
+  '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',
+  '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',
+  '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',
+  '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',
   // opcional: también la original
   // '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',
 ];
