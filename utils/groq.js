@@ -84,8 +84,6 @@ Cuando el usuario pida "menu", "menú", "ahora menu", "ayuda" o similar:
 Devolves SOLO un JSON con esta forma exacta, sin texto extra, sin markdown:
 {"plugins":[{"filename":"nombre.js","code":"contenido completo del archivo"}]}`;
 
-
-
 async function callGroq(messages, attempt = 0) {
   if (attempt >= GROQ_KEYS.length) {
     throw new Error('Todas las keys de Groq dieron rate limit o error');
