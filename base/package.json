@@ -1,0 +1,14 @@
+{
+  "name": "__PKG_NAME__",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "baileysx": "latest",
+    "pino": "^9.0.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
