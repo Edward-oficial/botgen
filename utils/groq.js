@@ -1,4 +1,4 @@
-const GROQ_API_KEY = process.env.GROQ_API_KEY || 'PONE_AQUI_TU_GROQ_API_KEY';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'llama-3.3-70b-versatile';
 
