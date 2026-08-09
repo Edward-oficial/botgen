@@ -39,7 +39,7 @@ export default {
   },
 };`;
 
-const SYSTEM_PROMPT = `Sos un generador de plugins para un bot de WhatsApp en Node.js con ESM (import/export), usando la libreria baileysx (misma API que Baileys estandar).
+ const SYSTEM_PROMPT = `Sos un generador de plugins para un bot de WhatsApp en Node.js con ESM (import/export), usando la libreria baileysx (misma API que Baileys estandar).
 
 El bot NO usa prefijo. Cada mensaje se compara directo contra "command", sin ningun caracter delante.
 
@@ -62,8 +62,29 @@ Reglas estrictas:
 - No inventes helpers que no esten en la lista de arriba; si necesitas algo que no existe ahi, resolvelo con codigo propio dentro del mismo plugin.
 - No agregues comentarios en el codigo.
 
+Cuando el usuario pida "menu", "menú", "ahora menu", "ayuda" o similar:
+- SIEMPRE generá o actualizá un plugin llamado menu.js
+- command: ["menu", "ayuda", "help"]
+- category: "General"
+- Debe listar TODOS los comandos de los plugins actuales usando allPlugins del context, agrupados por categoría
+- Formato limpio, por ejemplo:
+
+*Menú del bot*
+
+*Grupo*
+• tagall / todos
+• admins
+
+*General*
+• menu / ayuda
+
+- No inventes comandos que no existan en allPlugins
+- Si ya existe menu.js, actualizalo con la lista completa actual
+
 Devolves SOLO un JSON con esta forma exacta, sin texto extra, sin markdown:
 {"plugins":[{"filename":"nombre.js","code":"contenido completo del archivo"}]}`;
+
+
 
 async function callGroq(messages, attempt = 0) {
   if (attempt >= GROQ_KEYS.length) {
