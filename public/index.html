@@ -171,6 +171,34 @@ const instructionEl = document.getElementById('instruction');
 const downloadBar = document.getElementById('downloadBar');
 const fileCount = document.getElementById('fileCount');
 
+function saveState() {
+  localStorage.setItem('duanx_plugins', JSON.stringify(plugins));
+  localStorage.setItem('duanx_botName', document.getElementById('botName').value);
+  localStorage.setItem('duanx_creator', document.getElementById('creator').value);
+  localStorage.setItem('duanx_ownerNumber', document.getElementById('ownerNumber').value);
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('duanx_plugins');
+    if (saved) {
+      plugins = JSON.parse(saved);
+      if (plugins.length) {
+        renderFilesBubble();
+        updateDownloadBar();
+      }
+    }
+
+    const botName = localStorage.getItem('duanx_botName');
+    const creator = localStorage.getItem('duanx_creator');
+    const ownerNumber = localStorage.getItem('duanx_ownerNumber');
+
+    if (botName) document.getElementById('botName').value = botName;
+    if (creator) document.getElementById('creator').value = creator;
+    if (ownerNumber) document.getElementById('ownerNumber').value = ownerNumber;
+  } catch (_) {}
+}
+
 function addBubble(text, who) {
   const div = document.createElement('div');
   div.className = 'bubble ' + who;
@@ -260,6 +288,7 @@ async function send() {
     plugins = data.plugins;
     renderFilesBubble();
     updateDownloadBar();
+    saveState();
     status.textContent = 'Listo';
     status.className = 'status ok';
   } catch (err) {
@@ -276,6 +305,10 @@ instructionEl.addEventListener('keydown', (e) => {
     e.preventDefault();
     send();
   }
+});
+
+['botName', 'creator', 'ownerNumber'].forEach(id => {
+  document.getElementById(id).addEventListener('input', saveState);
 });
 
 document.getElementById('downloadBtn').addEventListener('click', async () => {
@@ -307,6 +340,7 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
     a.download = botName.replace(/\s+/g, '-') + '.zip';
     a.click();
     URL.revokeObjectURL(url);
+    saveState();
     status.textContent = 'Zip descargado';
     status.className = 'status ok';
   } catch (err) {
@@ -314,6 +348,8 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
     status.className = 'status err';
   }
 });
+
+loadState();
 </script>
 </body>
 </html>
