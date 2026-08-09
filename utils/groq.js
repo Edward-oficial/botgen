@@ -1,4 +1,4 @@
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || 'PONE_AQUI_TU_GROQ_API_KEY';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'llama-3.3-70b-versatile';
 
@@ -55,6 +55,7 @@ async function callGroq(messages) {
       messages,
       response_format: { type: 'json_object' },
       temperature: 0.4,
+      max_tokens: 8000,
     }),
   });
 
@@ -68,10 +69,17 @@ async function callGroq(messages) {
   return JSON.parse(content);
 }
 
-export async function generatePlugins(specs) {
+export async function chatUpdate(existingPlugins, instruction) {
+  const existingBlock = existingPlugins.length
+    ? `Plugins actuales del bot:\n\n${existingPlugins.map((p) => `--- ${p.filename} ---\n${p.code}`).join('\n\n')}`
+    : 'Todavia no hay ningun plugin, este es el primer pedido.';
+
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: `Especificaciones del bot:\n${specs}` },
+    {
+      role: 'user',
+      content: `${existingBlock}\n\nPedido nuevo del usuario:\n${instruction}\n\nDevolve el array COMPLETO y actualizado de plugins: los que no cambiaron van igual (sin tocarlos), los modificados con su nueva version, y los nuevos que haga falta agregar. Si el usuario pide borrar o sacar un comando, no lo incluyas en la respuesta.`,
+    },
   ];
 
   const result = await callGroq(messages);
