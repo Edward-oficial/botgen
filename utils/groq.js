@@ -1,6 +1,24 @@
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
+const GROQ_KEYS = [
+  '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',
+  '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',
+  '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',
+  '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',
+  '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',
+  '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',
+  // opcional: también la original
+  // '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',
+];
+
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'llama-3.3-70b-versatile';
+
+let keyIndex = 0;
+
+function nextKey() {
+  const key = GROQ_KEYS[keyIndex % GROQ_KEYS.length];
+  keyIndex = (keyIndex + 1) % GROQ_KEYS.length;
+  return key;
+}
 
 const EXAMPLE_PLUGIN = `import { mencionarATodos } from "../mentions.js";
 
@@ -43,12 +61,18 @@ Reglas estrictas:
 Devolves SOLO un JSON con esta forma exacta, sin texto extra, sin markdown:
 {"plugins":[{"filename":"nombre.js","code":"contenido completo del archivo"}]}`;
 
-async function callGroq(messages) {
+async function callGroq(messages, attempt = 0) {
+  if (attempt >= GROQ_KEYS.length) {
+    throw new Error('Todas las keys de Groq dieron rate limit o error');
+  }
+
+  const key = nextKey();
+
   const res = await fetch(GROQ_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${GROQ_API_KEY}`,
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
       model: MODEL,
@@ -58,6 +82,11 @@ async function callGroq(messages) {
       max_tokens: 8000,
     }),
   });
+
+  if (res.status === 429) {
+    // rate limit → probar siguiente key
+    return callGroq(messages, attempt + 1);
+  }
 
   if (!res.ok) {
     const text = await res.text();
@@ -71,14 +100,14 @@ async function callGroq(messages) {
 
 export async function chatUpdate(existingPlugins, instruction) {
   const existingBlock = existingPlugins.length
-    ? `Plugins actuales del bot:\n\n${existingPlugins.map((p) => `--- ${p.filename} ---\n${p.code}`).join('\n\n')}`
+    ? `Plugins actuales del bot:\n\n${existingPlugins.map((p) => `--- \( {p.filename} ---\n \){p.code}`).join('\n\n')}`
     : 'Todavia no hay ningun plugin, este es el primer pedido.';
 
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
     {
       role: 'user',
-      content: `${existingBlock}\n\nPedido nuevo del usuario:\n${instruction}\n\nDevolve el array COMPLETO y actualizado de plugins: los que no cambiaron van igual (sin tocarlos), los modificados con su nueva version, y los nuevos que haga falta agregar. Si el usuario pide borrar o sacar un comando, no lo incluyas en la respuesta.`,
+      content: `\( {existingBlock}\n\nPedido nuevo del usuario:\n \){instruction}\n\nDevolve el array COMPLETO y actualizado de plugins: los que no cambiaron van igual (sin tocarlos), los modificados con su nueva version, y los nuevos que haga falta agregar. Si el usuario pide borrar o sacar un comando, no lo incluyas en la respuesta.`,
     },
   ];
 
@@ -91,7 +120,7 @@ export async function fixPlugin(filename, code, errorMessage) {
     { role: 'system', content: SYSTEM_PROMPT },
     {
       role: 'user',
-      content: `Este plugin "${filename}" tiene un error de sintaxis, corregilo. Devolve el JSON con un solo plugin corregido.\n\nCodigo:\n${code}\n\nError:\n${errorMessage}`,
+      content: `Este plugin "\( {filename}" tiene un error de sintaxis, corregilo. Devolve el JSON con un solo plugin corregido.\n\nCodigo:\n \){code}\n\nError:\n${errorMessage}`,
     },
   ];
 
